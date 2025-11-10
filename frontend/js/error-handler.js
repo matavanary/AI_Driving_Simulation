@@ -89,12 +89,21 @@ class ErrorHandler {
             'Loading chunk',
             'dynamically imported module',
             'webkitCancel',
-            'runtime.lastError'
+            'runtime.lastError',
+            'installHook',           // Browser extension hook
+            'overrideMethod',        // Extension method override
+            'chrome-extension://',   // Chrome extension URLs
+            'moz-extension://',      // Firefox extension URLs
+            'Extension',             // Generic extension errors
+            'DevTools',              // Developer tools errors
+            'Script error.',         // Cross-origin script errors
+            'Non-Error promise'      // Promise rejections without proper Error objects
         ];
 
         return minorPatterns.some(pattern => 
             error.message?.includes(pattern) || 
-            error.stack?.includes(pattern)
+            error.stack?.includes(pattern) ||
+            error.filename?.includes(pattern)
         );
     }
 
@@ -103,13 +112,23 @@ class ErrorHandler {
         if (typeof reason === 'string') {
             return reason.includes('runtime.lastError') || 
                    reason.includes('Extension context invalidated') ||
-                   reason.includes('message port closed');
+                   reason.includes('message port closed') ||
+                   reason.includes('installHook') ||
+                   reason.includes('overrideMethod');
         }
 
         if (reason?.message) {
             return reason.message.includes('runtime.lastError') ||
                    reason.message.includes('Extension context invalidated') ||
-                   reason.message.includes('message port closed');
+                   reason.message.includes('message port closed') ||
+                   reason.message.includes('installHook') ||
+                   reason.message.includes('overrideMethod');
+        }
+
+        if (reason?.stack) {
+            return reason.stack.includes('installHook.js') ||
+                   reason.stack.includes('chrome-extension://') ||
+                   reason.stack.includes('moz-extension://');
         }
 
         return false;
