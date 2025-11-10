@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Test - Driving Simulator</title>
+</head>
+<body>
+    <h1>🚗 Driving Behavior Simulation System</h1>
+    <p>ระบบทำงานแล้ว! 🎉</p>
+    
+    <h2>ทดสอบการเชื่อมต่อฐานข้อมูล:</h2>
+    <div id="db-test"></div>
+    
+    <script>
+        // ทดสอบ API
+        fetch('../backend/api/test.php')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('db-test').innerHTML = 
+                    data.success ? '✅ เชื่อมต่อฐานข้อมูลสำเร็จ' : '❌ เชื่อมต่อฐานข้อมูลไม่สำเร็จ';
+            })
+            .catch(error => {
+                document.getElementById('db-test').innerHTML = '❌ ไม่สามารถเรียก API ได้';
+            });
+    </script>
+</body>
+</html>

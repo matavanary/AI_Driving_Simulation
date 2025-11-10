@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ด - DriveSim Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="container">
+            <div class="dashboard-nav">
+                <div class="logo">
+                    <a href="index.html">
+                        <i class="fas fa-car"></i>
+                        <h1>DriveSim Pro</h1>
+                    </a>
+                </div>
+                <nav class="nav-menu">
+                    <a href="dashboard.html" class="nav-link active">
+                        <i class="fas fa-tachometer-alt"></i> แดชบอร์ด
+                    </a>
+                    <a href="simulator.html" class="nav-link">
+                        <i class="fas fa-gamepad"></i> จำลองการขับ
+                    </a>
+                    <a href="#" class="nav-link" onclick="showReportsModal()">
+                        <i class="fas fa-chart-bar"></i> รายงาน
+                    </a>
+                </nav>
+                <div class="user-menu">
+                    <span class="user-name" id="dashboard-user-name">ผู้ใช้</span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn"><i class="fas fa-chevron-down"></i></button>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="showProfileModal()"><i class="fas fa-user"></i> โปรไฟล์</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Stats Overview -->
+            <section class="stats-overview">
+                <h2><i class="fas fa-chart-line"></i> ภาพรวมสถิติ</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-sessions">-</h3>
+                            <p>เซสชันทั้งหมด</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="avg-score">-</h3>
+                            <p>คะแนนเฉลี่ย</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-distance">-</h3>
+                            <p>ระยะทางรวม</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-time">-</h3>
+                            <p>เวลารวม</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="charts-grid">
+                    <!-- Score Trend Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-line-chart"></i> แนวโน้มคะแนน</h3>
+                            <div class="chart-controls">
+                                <select id="score-period">
+                                    <option value="7">7 วันล่าสุด</option>
+                                    <option value="30">30 วันล่าสุด</option>
+                                    <option value="90">90 วันล่าสุด</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="score-trend-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Analysis Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-pie-chart"></i> การวิเคราะห์พฤติกรรม</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="behavior-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recent Sessions -->
+            <section class="recent-sessions">
+                <div class="section-header">
+                    <h2><i class="fas fa-history"></i> เซสชันล่าสุด</h2>
+                    <button class="btn btn-outline btn-sm" onclick="loadAllSessions()">
+                        <i class="fas fa-list"></i> ดูทั้งหมด
+                    </button>
+                </div>
+                <div class="sessions-table-container">
+                    <table class="sessions-table">
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>สภาพแวดล้อม</th>
+                                <th>เวลา</th>
+                                <th>ระยะทาง</th>
+                                <th>คะแนน</th>
+                                <th>เกรด</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sessions-table-body">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="loading-spinner">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        กำลังโหลด...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Performance Analysis -->
+            <section class="performance-analysis">
+                <h2><i class="fas fa-analytics"></i> การวิเคราะห์ประสิทธิภาพ</h2>
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <h4>การปรับปรุง</h4>
+                            <i class="fas fa-arrow-trend-up"></i>
+                        </div>
+                        <div class="analysis-content">
+                            <div class="improvement-item">
+                                <span class="improvement-label">คะแนนล่าสุด:</span>
+                                <span class="improvement-value" id="latest-score">-</span>
+                            </div>
+                            <div class="improvement-item">
+                                <span class="improvement-label">การเปลี่ยนแปลง:</span>
+                                <span class="improvement-value" id="score-change">-</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="improvement-progress"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <h4>พฤติกรรมที่ต้องปรับปรุง</h4>
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="analysis-content">
+                            <div class="behavior-list" id="improvement-suggestions">
+                                <p class="text-muted">กำลังวิเคราะห์...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card">
+                        <div class="analysis-header">
+                            <h4>จุดแข็ง</h4>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="analysis-content">
+                            <div class="strength-list" id="driving-strengths">
+                                <p class="text-muted">กำลังวิเคราะห์...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Session Details Modal -->
+    <div id="session-details-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>รายละเอียดเซสชัน</h3>
+                <button class="close-btn" onclick="closeModal('session-details-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="session-info-grid">
+                    <div class="session-basic-info">
+                        <h4>ข้อมูลพื้นฐาน</h4>
+                        <div class="info-item">
+                            <span class="info-label">วันที่:</span>
+                            <span class="info-value" id="detail-date">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">สภาพแวดล้อม:</span>
+                            <span class="info-value" id="detail-environment">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">ประเภทรถ:</span>
+                            <span class="info-value" id="detail-vehicle">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">อุปกรณ์ควบคุม:</span>
+                            <span class="info-value" id="detail-input">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="session-stats">
+                        <h4>สถิติการขับ</h4>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">เวลารวม:</span>
+                                <span class="stat-value" id="detail-duration">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">ระยะทาง:</span>
+                                <span class="stat-value" id="detail-distance">-</span>
+                            </div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">ความเร็วเฉลี่ย:</span>
+                                <span class="stat-value" id="detail-avg-speed">-</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">ความเร็วสูงสุด:</span>
+                                <span class="stat-value" id="detail-max-speed">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session-evaluation">
+                    <h4>ผลการประเมิน</h4>
+                    <div class="evaluation-summary">
+                        <div class="score-display-large">
+                            <div class="score-circle-large">
+                                <span class="score-value-large" id="detail-score">-</span>
+                                <span class="score-max">/100</span>
+                            </div>
+                            <div class="grade-display-large">
+                                <span id="detail-grade">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="behavior-breakdown">
+                            <div class="behavior-item">
+                                <span class="behavior-icon overspeed"><i class="fas fa-tachometer-alt"></i></span>
+                                <span class="behavior-name">ขับเร็วเกิน</span>
+                                <span class="behavior-count" id="detail-overspeed">-</span>
+                            </div>
+                            <div class="behavior-item">
+                                <span class="behavior-icon sudden-brake"><i class="fas fa-hand-paper"></i></span>
+                                <span class="behavior-name">เบรกกะทันหัน</span>
+                                <span class="behavior-count" id="detail-sudden-brake">-</span>
+                            </div>
+                            <div class="behavior-item">
+                                <span class="behavior-icon lane-violation"><i class="fas fa-road"></i></span>
+                                <span class="behavior-name">ออกนอกเลน</span>
+                                <span class="behavior-count" id="detail-lane-violation">-</span>
+                            </div>
+                            <div class="behavior-item">
+                                <span class="behavior-icon collision"><i class="fas fa-car-crash"></i></span>
+                                <span class="behavior-name">การชน</span>
+                                <span class="behavior-count" id="detail-collision">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="session-recommendations">
+                    <h4>คำแนะนำเพื่อการปรับปรุง</h4>
+                    <div class="recommendations-list" id="detail-recommendations">
+                        <p class="text-muted">ไม่มีข้อมูลคำแนะนำ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="downloadSessionReport()">
+                    <i class="fas fa-download"></i> ดาวน์โหลดรายงาน
+                </button>
+                <button class="btn btn-outline" onclick="closeModal('session-details-modal')">
+                    <i class="fas fa-times"></i> ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

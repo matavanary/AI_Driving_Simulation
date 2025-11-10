@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driving Behavior Simulation System</title>
+    <link rel="stylesheet" href="frontend/css/style.css">
+    <link rel="stylesheet" href="frontend/css/responsive.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-car"></i>
+                <h1>DriveSim Pro</h1>
+            </div>
+            <nav class="nav">
+                <ul id="nav-menu">
+                    <li><a href="#home">หน้าหลัก</a></li>
+                    <li><a href="#features">คุณสมบัติ</a></li>
+                    <li><a href="#about">เกี่ยวกับ</a></li>
+                    <li><a href="#contact">ติดต่อ</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons" id="auth-buttons">
+                <button class="btn btn-outline" onclick="showLoginModal()">เข้าสู่ระบบ</button>
+                <button class="btn btn-primary" onclick="showRegisterModal()">สมัครสมาชิก</button>
+            </div>
+            <div class="user-menu hidden" id="user-menu">
+                <div class="user-info">
+                    <span id="user-name">ผู้ใช้</span>
+                    <div class="dropdown">
+                        <button class="dropdown-btn"><i class="fas fa-chevron-down"></i></button>
+                        <div class="dropdown-content">
+                            <a href="frontend/dashboard.html"><i class="fas fa-tachometer-alt"></i> แดชบอร์ด</a>
+                            <a href="frontend/simulator.html"><i class="fas fa-gamepad"></i> จำลองการขับ</a>
+                            <a href="#" onclick="showProfileModal()"><i class="fas fa-user"></i> โปรไฟล์</a>
+                            <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h2>ระบบจำลองการขับรถและประเมินพฤติกรรม</h2>
+                <p>เรียนรู้และฝึกฝนการขับรถอย่างปลอดภัยด้วยเทคโนโลยี 3D และการวิเคราะห์พฤติกรรมแบบเรียลไทม์</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-large btn-primary" onclick="startSimulation()">
+                        <i class="fas fa-play"></i> เริ่มจำลองการขับ
+                    </button>
+                    <button class="btn btn-large btn-outline" onclick="watchDemo()">
+                        <i class="fas fa-video"></i> ดูตัวอย่าง
+                    </button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="car-animation">
+                    <i class="fas fa-car"></i>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <span>เลื่อนลงเพื่อดูข้อมูลเพิ่มเติม</span>
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>คุณสมบัติเด่น</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <h3>จำลอง 3D สมจริง</h3>
+                    <p>ระบบจำลองการขับรถ 3 มิติที่สมจริงด้วยเทคโนโลยี Three.js</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3>รองรับ Logitech G29</h3>
+                    <p>เชื่อมต่อกับอุปกรณ์จริง เช่น Logitech G29/G923 สำหรับประสบการณ์ที่สมจริง</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>วิเคราะห์พฤติกรรม</h3>
+                    <p>ประเมินพฤติกรรมการขับรถแบบเรียลไทม์ พร้อมคำแนะนำเพื่อการปรับปรุง</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <h3>ระบบให้คะแนน</h3>
+                    <p>คะแนนและเกรดการขับรถตามมาตรฐานสากล พร้อมรายงานผล</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud-sun"></i>
+                    </div>
+                    <h3>หลากหลายสภาพแวดล้อม</h3>
+                    <p>ฝึกขับในสภาพต่างๆ เช่น เมือง ทางด่วน กลางคืน และฝนตก</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <h3>รายงาน PDF</h3>
+                    <p>ดาวน์โหลดรายงานผลการขับขี่เป็น PDF พร้อมกราฟและข้อแนะนำ</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3 id="total-users">1,250+</h3>
+                    <p>ผู้ใช้งาน</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="total-sessions">15,600+</h3>
+                    <p>เซสชันฝึกขับ</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="avg-improvement">85%</h3>
+                    <p>การปรับปรุงเฉลี่ย</p>
+                </div>
+                <div class="stat-item">
+                    <h3 id="success-rate">92%</h3>
+                    <p>อัตราความพึงพอใจ</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>เกี่ยวกับระบบ</h2>
+                    <p>ระบบจำลองการขับรถและประเมินพฤติกรรมนี้พัฒนาขึ้นเพื่อให้ผู้เรียนขับรถสามารถฝึกฝนและปรับปรุงทักษะการขับรถในสภาพแวดล้อมที่ปลอดภัย</p>
+                    <div class="tech-stack">
+                        <h4>เทคโนโลยีที่ใช้:</h4>
+                        <div class="tech-items">
+                            <span class="tech-item">PHP 5.6+</span>
+                            <span class="tech-item">MySQL</span>
+                            <span class="tech-item">Three.js</span>
+                            <span class="tech-item">Web Gamepad API</span>
+                            <span class="tech-item">Chart.js</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="simulation-preview">
+                        <div class="screen">
+                            <div class="road"></div>
+                            <div class="car-icon"><i class="fas fa-car"></i></div>
+                            <div class="hud">
+                                <span class="speed">65 km/h</span>
+                                <span class="score">Score: 85</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>ติดต่อเราได้ที่</h2>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <h4>อีเมล</h4>
+                    <p>info@drivesim.com</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <h4>โทรศัพท์</h4>
+                    <p>02-123-4567</p>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h4>ที่อยู่</h4>
+                    <p>123 ถนนเทคโนโลยี แขวงนวัตกรรม เขตอนาคต กรุงเทพฯ 10400</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-car"></i>
+                    <h3>DriveSim Pro</h3>
+                </div>
+                <p>&copy; 2025 Mr.Nattakit Rookkason. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>เข้าสู่ระบบ</h3>
+                <button class="close-btn" onclick="closeModal('login-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>ชื่อผู้ใช้หรือ อีเมล</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รหัสผ่าน</label>
+                        <div class="password-input">
+                            <input type="password" id="login-password" required>
+                            <button type="button" class="toggle-password" onclick="togglePassword('login-password')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="remember-me">
+                            <span>จดจำการเข้าสู่ระบบ</span>
+                        </label>
+                        <a href="#" onclick="showForgotPassword()">ลืมรหัสผ่าน?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+                        เข้าสู่ระบบ
+                    </button>
+                </form>
+                <div class="modal-footer">
+                    <p>ยังไม่มีบัญชี? <a href="#" onclick="switchToRegister()">สมัครสมาชิก</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>สมัครสมาชิก</h3>
+                <button class="close-btn" onclick="closeModal('register-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ชื่อผู้ใช้ *</label>
+                            <input type="text" id="register-username" required>
+                            <div class="field-hint">3-20 ตัวอักษร ภาษาอังกฤษและตัวเลขเท่านั้น</div>
+                        </div>
+                        <div class="form-group">
+                            <label>อีเมล *</label>
+                            <input type="email" id="register-email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>ชื่อ-นามสกุล *</label>
+                        <input type="text" id="register-fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>เบอร์โทรศัพท์</label>
+                        <input type="tel" id="register-phone">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>รหัสผ่าน *</label>
+                            <div class="password-input">
+                                <input type="password" id="register-password" required>
+                                <button type="button" class="toggle-password" onclick="togglePassword('register-password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="password-strength"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>ยืนยันรหัสผ่าน *</label>
+                            <div class="password-input">
+                                <input type="password" id="register-confirm-password" required>
+                                <button type="button" class="toggle-password" onclick="togglePassword('register-confirm-password')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="agree-terms" required>
+                            <span>ฉันยอมรับ <a href="#" onclick="showTerms()">ข้อตกลงการใช้งาน</a></span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+                        สมัครสมาชิก
+                    </button>
+                </form>
+                <div class="modal-footer">
+                    <p>มีบัญชีอยู่แล้ว? <a href="#" onclick="switchToLogin()">เข้าสู่ระบบ</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>จัดการโปรไฟล์</h3>
+                <button class="close-btn" onclick="closeModal('profile-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label>ชื่อ-นามสกุล</label>
+                        <input type="text" id="profile-fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>อีเมล</label>
+                        <input type="email" id="profile-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>เบอร์โทรศัพท์</label>
+                        <input type="tel" id="profile-phone">
+                    </div>
+                    <button type="submit" class="btn btn-primary">อัพเดทโปรไฟล์</button>
+                </form>
+                
+                <hr>
+                
+                <h4>เปลี่ยนรหัสผ่าน</h4>
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label>รหัสผ่านปัจจุบัน</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>รหัสผ่านใหม่</label>
+                        <input type="password" id="new-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="confirm-new-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">เปลี่ยนรหัสผ่าน</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>กำลังโหลด...</p>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification hidden">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+            <button class="notification-close">&times;</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Error Handler (load first) -->
+    <script src="frontend/js/error-handler.js"></script>
+    
+    <!-- API Helper (load before main.js) -->
+    <script src="frontend/js/api.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="frontend/js/main.js"></script>
+</body>
+</html>

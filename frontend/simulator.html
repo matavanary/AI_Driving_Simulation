@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จำลองการขับรถ - DriveSim Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/simulator.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="simulator-body">
+    <!-- Header -->
+    <header class="simulator-header">
+        <div class="container">
+            <div class="simulator-nav">
+                <a href="../" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>กลับหน้าหลัก</span>
+                </a>
+                <div class="simulator-title">
+                    <h1><i class="fas fa-gamepad"></i> จำลองการขับรถ</h1>
+                </div>
+                <div class="user-info">
+                    <span id="current-user">ผู้ใช้</span>
+                    <button class="btn btn-sm btn-outline" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Simulator Interface -->
+    <div class="simulator-container">
+        <!-- Left Panel - Controls & Settings -->
+        <div class="left-panel">
+            <div class="control-section">
+                <h3><i class="fas fa-cogs"></i> การตั้งค่า</h3>
+                
+                <!-- Environment Selection -->
+                <div class="setting-group">
+                    <label>สภาพแวดล้อม:</label>
+                    <select id="environment-select">
+                        <option value="city">เมือง (50 km/h)</option>
+                        <option value="highway">ทางด่วน (120 km/h)</option>
+                        <option value="night">กลางคืน (50 km/h)</option>
+                        <option value="rain">ฝนตก (40 km/h)</option>
+                    </select>
+                </div>
+                
+                <!-- Vehicle Selection -->
+                <div class="setting-group">
+                    <label>ประเภทรถ:</label>
+                    <select id="vehicle-select">
+                        <option value="sedan">รถเก๋ง</option>
+                        <option value="suv">รถ SUV</option>
+                        <option value="truck">รถกระบะ</option>
+                        <option value="motorcycle">รถจักรยานยนต์</option>
+                    </select>
+                </div>
+                
+                <!-- Input Device -->
+                <div class="setting-group">
+                    <label>อุปกรณ์ควบคุม:</label>
+                    <select id="input-device-select">
+                        <option value="keyboard">คีย์บอร์ด</option>
+                        <option value="gamepad">Gamepad</option>
+                        <option value="g29">Logitech G29</option>
+                    </select>
+                </div>
+                
+                <!-- Start/Stop Controls -->
+                <div class="session-controls">
+                    <button id="start-session-btn" class="btn btn-primary btn-full">
+                        <i class="fas fa-play"></i> เริ่มการขับ
+                    </button>
+                    <button id="stop-session-btn" class="btn btn-danger btn-full hidden">
+                        <i class="fas fa-stop"></i> หยุดการขับ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Device Status -->
+            <div class="device-status">
+                <h4><i class="fas fa-gamepad"></i> สถานะอุปกรณ์</h4>
+                <div class="device-info">
+                    <div class="status-item">
+                        <span class="status-label">Gamepad:</span>
+                        <span id="gamepad-status" class="status-disconnected">ไม่ได้เชื่อมต่อ</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">G29:</span>
+                        <span id="g29-status" class="status-disconnected">ไม่ได้เชื่อมต่อ</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Keyboard Controls Help -->
+            <div class="controls-help">
+                <h4><i class="fas fa-keyboard"></i> การควบคุม</h4>
+                <div class="control-mapping">
+                    <div class="control-item">
+                        <kbd>W</kbd> <span>เร่ง</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>S</kbd> <span>เบรก</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>A</kbd> <span>เลี้ยวซ้าย</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>D</kbd> <span>เลี้ยวขวา</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>Space</kbd> <span>เบรกมือ</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>R</kbd> <span>รีเซ็ต</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Panel - 3D Simulation -->
+        <div class="center-panel">
+            <!-- 3D Canvas Container -->
+            <div id="simulation-container" class="simulation-container">
+                <canvas id="three-canvas" width="800" height="600"></canvas>
+                
+                <!-- Canvas Debug Info -->
+                <div id="canvas-debug" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 3px; font-size: 11px; font-family: monospace; z-index: 100;">
+                    Canvas: <span id="canvas-status">Loading...</span>
+                </div>
+                
+                <!-- Loading Screen -->
+                <div id="simulation-loading" class="simulation-loading">
+                    <div class="loading-content">
+                        <div class="spinner-large"></div>
+                        <h3>กำลังโหลดการจำลอง...</h3>
+                        <p id="loading-progress">0%</p>
+                    </div>
+                </div>
+                
+                <!-- HUD Overlay -->
+                <div id="hud-overlay" class="hud-overlay hidden">
+                    <!-- Speedometer -->
+                    <div class="hud-speedometer">
+                        <div class="speed-circle">
+                            <div class="speed-needle" id="speed-needle"></div>
+                            <div class="speed-text">
+                                <span id="speed-value">0</span>
+                                <small>km/h</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Vehicle Info -->
+                    <div class="hud-vehicle-info">
+                        <div class="gear-indicator">
+                            <span>เกียร์</span>
+                            <span id="gear-value">1</span>
+                        </div>
+                        <div class="rpm-indicator">
+                            <span>RPM</span>
+                            <span id="rpm-value">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Session Timer -->
+                    <div class="hud-timer">
+                        <i class="fas fa-clock"></i>
+                        <span id="session-time">00:00</span>
+                    </div>
+                    
+                    <!-- Real-time Warnings -->
+                    <div id="warning-display" class="warning-display hidden">
+                        <div class="warning-content">
+                            <i class="warning-icon"></i>
+                            <span class="warning-text"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Camera Controls -->
+                <div class="camera-controls">
+                    <button class="camera-btn" id="camera-cockpit" title="มุมมองในรถ">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="camera-btn" id="camera-follow" title="มุมมองติดตาม">
+                        <i class="fas fa-video"></i>
+                    </button>
+                    <button class="camera-btn" id="camera-top" title="มุมมองบนลง">
+                        <i class="fas fa-drone"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Real-time Data -->
+        <div class="right-panel">
+            <!-- Real-time Stats -->
+            <div class="stats-section">
+                <h3><i class="fas fa-tachometer-alt"></i> สถิติเรียลไทม์</h3>
+                
+                <div class="stat-item">
+                    <span class="stat-label">ความเร็วปัจจุบัน:</span>
+                    <span class="stat-value" id="current-speed">0 km/h</span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">ความเร็วสูงสุด:</span>
+                    <span class="stat-value" id="max-speed">0 km/h</span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">ระยะทาง:</span>
+                    <span class="stat-value" id="distance">0.0 km</span>
+                </div>
+                
+                <div class="stat-item">
+                    <span class="stat-label">เวลาที่ใช้:</span>
+                    <span class="stat-value" id="elapsed-time">00:00</span>
+                </div>
+            </div>
+            
+            <!-- Behavior Analysis -->
+            <div class="behavior-section">
+                <h3><i class="fas fa-chart-line"></i> การวิเคราะห์พฤติกรรม</h3>
+                
+                <div class="behavior-item">
+                    <span class="behavior-label">ขับเร็วเกิน:</span>
+                    <span class="behavior-count overspeed" id="overspeed-count">0</span>
+                </div>
+                
+                <div class="behavior-item">
+                    <span class="behavior-label">เบรกกะทันหัน:</span>
+                    <span class="behavior-count sudden-brake" id="sudden-brake-count">0</span>
+                </div>
+                
+                <div class="behavior-item">
+                    <span class="behavior-label">ออกนอกเลน:</span>
+                    <span class="behavior-count lane-violation" id="lane-violation-count">0</span>
+                </div>
+                
+                <div class="behavior-item">
+                    <span class="behavior-label">การชน:</span>
+                    <span class="behavior-count collision" id="collision-count">0</span>
+                </div>
+            </div>
+            
+            <!-- Current Score -->
+            <div class="score-section">
+                <h3><i class="fas fa-star"></i> คะแนนปัจจุบัน</h3>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <div class="score-value" id="current-score">100</div>
+                        <div class="score-label">คะแนน</div>
+                    </div>
+                    <div class="grade-display">
+                        <span>เกรด: </span>
+                        <span id="current-grade" class="grade-a">A+</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mini Chart -->
+            <!-- <div class="chart-section"> -->
+                <!-- <h3><i class="fas fa-chart-area"></i> กราฟความเร็ว</h3> -->
+                <!-- <canvas id="speed-chart" width="300" height="150"></canvas> -->
+            <!-- </div> -->
+        </div>
+    </div>
+
+    <!-- End Session Modal -->
+    <div id="end-session-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>สรุปผลการขับรถ</h3>
+            </div>
+            <div class="modal-body">
+                <div class="session-summary">
+                    <div class="summary-stats">
+                        <div class="summary-item">
+                            <span class="summary-label">เวลารวม:</span>
+                            <span class="summary-value" id="summary-time">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">ระยะทางรวม:</span>
+                            <span class="summary-value" id="summary-distance">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">ความเร็วเฉลี่ย:</span>
+                            <span class="summary-value" id="summary-avg-speed">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">ความเร็วสูงสุด:</span>
+                            <span class="summary-value" id="summary-max-speed">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="final-score">
+                        <h4>คะแนนสุดท้าย</h4>
+                        <div class="final-score-display">
+                            <div class="final-score-circle">
+                                <span class="final-score-value" id="final-score">-</span>
+                                <span class="final-score-max">/100</span>
+                            </div>
+                            <div class="final-grade">
+                                <span id="final-grade">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="behavior-summary">
+                        <h4>สรุปพฤติกรรม</h4>
+                        <div class="behavior-grid">
+                            <div class="behavior-summary-item">
+                                <span class="behavior-count" id="summary-overspeed">0</span>
+                                <span class="behavior-name">ขับเร็วเกิน</span>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <span class="behavior-count" id="summary-sudden-brake">0</span>
+                                <span class="behavior-name">เบรกกะทันหัน</span>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <span class="behavior-count" id="summary-lane-violation">0</span>
+                                <span class="behavior-name">ออกนอกเลน</span>
+                            </div>
+                            <div class="behavior-summary-item">
+                                <span class="behavior-count" id="summary-collision">0</span>
+                                <span class="behavior-name">การชน</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="startNewSession()">
+                        <i class="fas fa-redo"></i> เริ่มใหม่
+                    </button>
+                    <button class="btn btn-primary" onclick="viewDetailedReport()">
+                        <i class="fas fa-chart-bar"></i> ดูรายงานละเอียด
+                    </button>
+                    <button class="btn btn-outline" onclick="closeModal('end-session-modal')">
+                        <i class="fas fa-times"></i> ปิด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Error Handler (load first) -->
+    <script src="js/error-handler.js"></script>
+    
+    <!-- External Libraries -->
+    <!-- Three.js with Enhanced Loading -->
+    <script>
+        console.log('🎯 Starting Three.js loading...');
+        
+        function loadThreeJS() {
+            const alternatives = [
+                'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+                'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
+                'https://unpkg.com/three@0.128.0/build/three.min.js',
+                'https://threejs.org/build/three.min.js',
+                'https://rawcdn.githack.com/mrdoob/three.js/r128/build/three.min.js'
+            ];
+            
+            let currentIndex = 0;
+            let loadStartTime = Date.now();
+            
+            function tryLoad() {
+                if (currentIndex >= alternatives.length) {
+                    console.error('❌ All Three.js CDNs failed');
+                    showThreeJSError();
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                const url = alternatives[currentIndex];
+                
+                console.log(`🔄 Trying Three.js [${currentIndex + 1}/${alternatives.length}]: ${url}`);
+                
+                const timeout = setTimeout(() => {
+                    console.warn(`⏰ Timeout loading Three.js from: ${url}`);
+                    script.remove();
+                    currentIndex++;
+                    tryLoad();
+                }, 8000);
+                
+                script.onload = () => {
+                    clearTimeout(timeout);
+                    const loadTime = Date.now() - loadStartTime;
+                    console.log(`✅ Three.js loaded successfully in ${loadTime}ms from: ${url}`);
+                    
+                    // Verify Three.js
+                    setTimeout(() => {
+                        if (typeof THREE !== 'undefined') {
+                            console.log('✅ Three.js verified, revision:', THREE.REVISION);
+                            showLoadSuccess('Three.js', THREE.REVISION);
+                        } else {
+                            console.error('❌ Three.js loaded but not accessible');
+                            showThreeJSError();
+                        }
+                    }, 100);
+                };
+                
+                script.onerror = () => {
+                    clearTimeout(timeout);
+                    console.warn(`❌ Failed to load Three.js from: ${url}`);
+                    currentIndex++;
+                    tryLoad();
+                };
+                
+                script.src = url;
+                document.head.appendChild(script);
+            }
+            
+            tryLoad();
+        }
+        
+        function showThreeJSError() {
+            console.error('💥 Three.js completely failed to load!');
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'threejs-error';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #dc3545;
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                z-index: 10000;
+                font-family: 'Kanit', sans-serif;
+                text-align: center;
+                max-width: 500px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            `;
+            errorDiv.innerHTML = `
+                <h3><i class="fas fa-exclamation-triangle"></i> ไม่สามารถโหลด Three.js ได้</h3>
+                <p>ระบบจำลอง 3D ไม่สามารถทำงานได้</p>
+                <div style="margin: 15px 0;">
+                    <button onclick="location.reload()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-sync"></i> รีเฟรช
+                    </button>
+                </div>
+                <small>หากปัญหาเกิดขึ้นซ้ำ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+        
+        function showLoadSuccess(lib, version) {
+            const successDiv = document.createElement('div');
+            successDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: #28a745;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                z-index: 9999;
+                font-family: 'Kanit', sans-serif;
+                font-size: 12px;
+            `;
+            successDiv.innerHTML = `<i class="fas fa-check"></i> ${lib} โหลดสำเร็จ (${version})`;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+        
+        // Start loading immediately
+        loadThreeJS();
+    </script>
+    
+    <!-- Chart.js with multiple fallbacks -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" 
+            onerror="loadChartJsFallback()"></script>
+    
+    <script>
+        // Chart.js fallback loader
+        function loadChartJsFallback() {
+            console.warn('Primary Chart.js CDN failed, trying alternatives...');
+            const alternatives = [
+                'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js',
+                'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.js',
+                'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js',
+                'js/chart-fallback.js' // Local fallback
+            ];
+            
+            let attemptCount = 0;
+            
+            function tryNextAlternative() {
+                if (attemptCount >= alternatives.length) {
+                    console.error('All Chart.js alternatives failed, using minimal fallback');
+                    // Create minimal Chart object if all else fails
+                    window.Chart = window.Chart || function(ctx, config) {
+                        console.warn('Using minimal Chart fallback');
+                        return {
+                            update: function() {},
+                            destroy: function() {},
+                            render: function() {}
+                        };
+                    };
+                    return;
+                }
+                
+                const script = document.createElement('script');
+                script.src = alternatives[attemptCount];
+                script.onload = () => {
+                    const source = attemptCount === alternatives.length - 1 ? 'local fallback' : 'alternative CDN';
+                    console.log(`Chart.js loaded successfully from ${source}`);
+                };
+                script.onerror = () => {
+                    attemptCount++;
+                    tryNextAlternative();
+                };
+                document.head.appendChild(script);
+            }
+            
+            tryNextAlternative();
+        }
+        
+        // Show library error message
+        function showLibraryError(libraryName) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: #ff4757;
+                color: white;
+                padding: 15px;
+                border-radius: 5px;
+                z-index: 10000;
+                max-width: 300px;
+                font-family: 'Kanit', sans-serif;
+            `;
+            errorDiv.innerHTML = `
+                <strong>⚠️ ไลบรารีโหลดไม่ได้</strong><br>
+                ${libraryName} ไม่สามารถโหลดได้<br>
+                <small>กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small>
+                <button onclick="this.parentElement.remove()" style="float:right;background:none;border:none;color:white;cursor:pointer;">×</button>
+            `;
+            document.body.appendChild(errorDiv);
+            
+            // Auto remove after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 10000);
+        }
+    </script>
+    
+    <!-- Utility Functions (load first) -->
+    <script src="js/utils.js"></script>
+    
+    <!-- API Helper (load before other scripts) -->
+    <script src="js/api.js"></script>
+    
+    <!-- Library Checker -->
+    <script>
+        // Check if all required libraries are loaded
+        function checkLibraries() {
+            const requiredLibs = {
+                'Three.js': () => typeof THREE !== 'undefined',
+                'Chart.js': () => typeof Chart !== 'undefined'
+            };
+            
+            const missing = [];
+            for (const [name, check] of Object.entries(requiredLibs)) {
+                if (!check()) {
+                    missing.push(name);
+                }
+            }
+            
+            if (missing.length > 0) {
+                console.warn('Missing libraries:', missing);
+                
+                // Show warning to user
+                const warningDiv = document.createElement('div');
+                warningDiv.style.cssText = `
+                    position: fixed;
+                    top: 70px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #ffc107;
+                    color: #212529;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    z-index: 9999;
+                    font-family: 'Kanit', sans-serif;
+                    text-align: center;
+                `;
+                warningDiv.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>คำเตือน:</strong> ไลบรารี ${missing.join(', ')} ไม่พร้อมใช้งาน<br>
+                    <small>ฟีเจอร์บางส่วนอาจไม่ทำงาน</small>
+                `;
+                document.body.appendChild(warningDiv);
+                
+                // Auto hide after 5 seconds
+                setTimeout(() => warningDiv.remove(), 5000);
+            } else {
+                console.log('✅ All required libraries loaded successfully');
+            }
+        }
+        
+        // Check libraries after page load
+        window.addEventListener('load', () => {
+            setTimeout(checkLibraries, 1000);
+        });
+    </script>
+
+    <!-- Application Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/gamepad.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/simulator.js"></script>
+
+    <!-- Initialize Simulator -->
+    <script>
+        // Debug information
+        console.log('🔍 Starting simulator initialization...');
+        
+        // Enhanced library checker with detailed logging
+        function checkLibraryStatus() {
+            const status = {
+                THREE: typeof THREE !== 'undefined',
+                Chart: typeof Chart !== 'undefined',
+                SimulationEngine: typeof SimulationEngine !== 'undefined',
+                SimulatorController: typeof SimulatorController !== 'undefined',
+                GamepadController: typeof GamepadController !== 'undefined'
+            };
+            
+            console.log('📚 Library Status:', status);
+            
+            // Show missing libraries
+            const missing = Object.entries(status)
+                .filter(([name, loaded]) => !loaded)
+                .map(([name]) => name);
+                
+            if (missing.length > 0) {
+                console.warn('❌ Missing libraries:', missing);
+                showMissingLibrariesError(missing);
+            }
+            
+            return missing.length === 0;
+        }
+        
+        // Show error for missing libraries
+        function showMissingLibrariesError(missing) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #dc3545;
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                z-index: 10000;
+                max-width: 500px;
+                font-family: 'Kanit', sans-serif;
+                text-align: center;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            `;
+            errorDiv.innerHTML = `
+                <h3><i class="fas fa-exclamation-triangle"></i> ไม่สามารถโหลดไลบรารีได้</h3>
+                <p>ไลบรารีที่ขาดหายไป: <strong>${missing.join(', ')}</strong></p>
+                <p>กรุณา:</p>
+                <ul style="text-align: left; margin: 10px 0;">
+                    <li>ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</li>
+                    <li>รีเฟรชหน้าเว็บ</li>
+                    <li>ลองใช้ CDN อื่น</li>
+                </ul>
+                <button onclick="location.reload()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                    <i class="fas fa-sync"></i> รีเฟรชหน้า
+                </button>
+                <button onclick="this.parentElement.remove()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; margin-left: 10px;">
+                    ปิด
+                </button>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+        
+        // Enhanced canvas checker
+        function checkCanvas() {
+            const canvas = document.getElementById('three-canvas');
+            if (!canvas) {
+                console.error('❌ Canvas element not found!');
+                return false;
+            }
+            
+            console.log('✅ Canvas found:', {
+                width: canvas.clientWidth,
+                height: canvas.clientHeight,
+                offsetWidth: canvas.offsetWidth,
+                offsetHeight: canvas.offsetHeight
+            });
+            
+            // Set canvas size if zero
+            if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+                console.warn('⚠️ Canvas has zero size, setting default...');
+                canvas.style.width = '100%';
+                canvas.style.height = '600px';
+            }
+            
+            return true;
+        }
+        
+        // Initialize simulator when all scripts are loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM Content Loaded');
+            
+            // Wait for all libraries to load
+            function waitForLibraries(callback, maxAttempts = 100) {
+                let attempts = 0;
+                
+                function check() {
+                    attempts++;
+                    console.log(`🔄 Library check attempt ${attempts}/100`);
+                    
+                    // Check all required components
+                    const allLoaded = typeof Chart !== 'undefined' && 
+                                     typeof THREE !== 'undefined' &&
+                                     typeof SimulationEngine !== 'undefined' &&
+                                     typeof SimulatorController !== 'undefined';
+                    
+                    if (allLoaded) {
+                        console.log('✅ All libraries loaded successfully!');
+                        callback();
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(check, 200); // Increased delay
+                    } else {
+                        console.warn('⏰ Timeout waiting for libraries, showing status...');
+                        checkLibraryStatus();
+                        
+                        // Try to initialize anyway if we have the minimum required
+                        if (typeof SimulatorController !== 'undefined') {
+                            console.log('🚀 Trying to initialize with available components...');
+                            callback();
+                        }
+                    }
+                }
+                
+                check();
+            }
+            
+            waitForLibraries(() => {
+                console.log('🚗 Starting simulator initialization...');
+                
+                // Check canvas before initialization
+                if (!checkCanvas()) {
+                    console.error('❌ Canvas check failed, cannot initialize simulator');
+                    return;
+                }
+                
+                // Final library status check
+                checkLibraryStatus();
+                
+                try {
+                    // Initialize simulator
+                    if (typeof SimulatorController !== 'undefined') {
+                        console.log('🎮 Creating SimulatorController instance...');
+                        window.simulator = new SimulatorController();
+                        console.log('✅ Simulator initialized successfully!');
+                    } else {
+                        console.error('❌ SimulatorController class not found!');
+                    }
+                } catch (error) {
+                    console.error('💥 Simulator initialization failed:', error);
+                    
+                    // Show error to user
+                    const errorDiv = document.createElement('div');
+                    errorDiv.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: #dc3545;
+                        color: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        z-index: 10000;
+                        font-family: 'Kanit', sans-serif;
+                        text-align: center;
+                    `;
+                    errorDiv.innerHTML = `
+                        <h3><i class="fas fa-exclamation-triangle"></i> เกิดข้อผิดพลาด</h3>
+                        <p>ไม่สามารถเริ่มต้นระบบจำลองได้</p>
+                        <p><strong>รายละเอียด:</strong> ${error.message}</p>
+                        <button onclick="location.reload()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            รีเฟรชหน้า
+                        </button>
+                    `;
+                    document.body.appendChild(errorDiv);
+                }
+            });
+        });
+        
+        // Additional debugging
+        window.addEventListener('load', () => {
+            console.log('🌐 Window loaded');
+            setTimeout(() => {
+                console.log('🔍 Final status check after 2 seconds...');
+                checkLibraryStatus();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

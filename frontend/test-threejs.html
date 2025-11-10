@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #2c3e50;
+            color: white;
+        }
+        canvas {
+            border: 2px solid #3498db;
+            background: #000;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #27ae60; }
+        .error { background: #e74c3c; }
+        .info { background: #3498db; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Three.js การทดสอบ</h1>
+    <div id="status" class="status info">กำลังโหลด Three.js...</div>
+    
+    <canvas id="test-canvas" width="800" height="600"></canvas>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="testRender()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🎬 ทดสอบการแสดงผล
+        </button>
+        <button onclick="checkWebGL()" style="padding: 10px 20px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            🔧 ตรวจสอบ WebGL
+        </button>
+    </div>
+    
+    <div id="info" style="margin-top: 20px; font-family: monospace; font-size: 12px;"></div>
+
+    <!-- Three.js Loading -->
+    <script>
+        const statusDiv = document.getElementById('status');
+        const infoDiv = document.getElementById('info');
+        
+        function updateStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+        
+        function addInfo(message) {
+            infoDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+        
+        // Load Three.js
+        function loadThreeJS() {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+            
+            script.onload = () => {
+                updateStatus('Three.js โหลดสำเร็จ! ✅', 'success');
+                addInfo(`Three.js revision: ${THREE.REVISION}`);
+                initTest();
+            };
+            
+            script.onerror = () => {
+                updateStatus('Three.js โหลดไม่ได้ ❌', 'error');
+                addInfo('ไม่สามารถโหลด Three.js ได้');
+            };
+            
+            document.head.appendChild(script);
+        }
+        
+        let scene, camera, renderer, cube;
+        
+        function initTest() {
+            try {
+                const canvas = document.getElementById('test-canvas');
+                
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87CEEB);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, 800/600, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ canvas: canvas });
+                renderer.setSize(800, 600);
+                
+                // Create a cube
+                const geometry = new THREE.BoxGeometry();
+                const material = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
+                cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
+                
+                // Add light
+                const light = new THREE.DirectionalLight(0xffffff, 1);
+                light.position.set(5, 5, 5);
+                scene.add(light);
+                
+                addInfo('✅ Scene initialized successfully');
+                animate();
+                
+            } catch (error) {
+                updateStatus('เกิดข้อผิดพลาดในการสร้างฉาก', 'error');
+                addInfo(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (cube) {
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function testRender() {
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+                addInfo('🎬 Manual render executed');
+            } else {
+                addInfo('❌ Cannot render - missing components');
+            }
+        }
+        
+        function checkWebGL() {
+            const gl = document.createElement('canvas').getContext('webgl') || 
+                      document.createElement('canvas').getContext('experimental-webgl');
+            
+            if (gl) {
+                addInfo('✅ WebGL is supported');
+                addInfo(`WebGL Vendor: ${gl.getParameter(gl.VENDOR)}`);
+                addInfo(`WebGL Renderer: ${gl.getParameter(gl.RENDERER)}`);
+            } else {
+                addInfo('❌ WebGL is not supported');
+            }
+        }
+        
+        // Start loading
+        loadThreeJS();
+    </script>
+</body>
+</html>
