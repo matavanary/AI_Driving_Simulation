@@ -1,25 +1,21 @@
-/* ===================================
-   Simulator Specific CSS
-   Author: Mr.Nattakit Rookkason
-   Version: 1.0
-   Date: 30 October 2025
-   ================================== */
+/* Simulator Specific CSS - Enhanced 3D Realism */
 
 .simulator-body {
-    background: var(--bg-dark);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     color: var(--text-white);
     overflow: hidden;
     height: 100vh;
 }
 
-/* Simulator Header */
+/* Enhanced Simulator Header */
 .simulator-header {
     position: fixed;
     top: 0;
     width: 100%;
     background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     z-index: 1000;
     padding: 0.5rem 0;
 }
@@ -38,17 +34,25 @@
     text-decoration: none;
     padding: 0.5rem 1rem;
     border-radius: var(--radius-md);
-    transition: var(--transition-fast);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .back-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .simulator-title h1 {
     margin: 0;
     font-size: 1.5rem;
-    color: var(--primary-color);
+    background: linear-gradient(45deg, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 600;
 }
 
 .user-info {
@@ -194,57 +198,76 @@ kbd {
     text-align: center;
 }
 
-/* Center Panel - Simulation */
+/* Enhanced Center Panel - 3D Simulation */
 .center-panel {
     position: relative;
-    background: #000;
+    background: linear-gradient(180deg, #000 0%, #111 100%);
     overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 
+        inset 0 0 50px rgba(0, 0, 0, 0.8),
+        0 0 30px rgba(59, 130, 246, 0.1);
 }
 
 .simulation-container {
     position: relative;
     width: 100%;
     height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 #three-canvas {
     display: block;
     width: 100%;
     height: 100%;
+    border-radius: 8px;
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
 }
 
-/* Loading Screen */
+/* Enhanced Loading Screen */
 .simulation-loading {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--bg-dark);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
+    border-radius: 8px;
 }
 
 .loading-content {
     text-align: center;
     color: var(--text-white);
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .spinner-large {
-    width: 60px;
-    height: 60px;
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid var(--primary-color);
+    width: 80px;
+    height: 80px;
+    border: 4px solid rgba(59, 130, 246, 0.3);
+    border-top: 4px solid #3b82f6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 2rem;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 .loading-content h3 {
     margin-bottom: 1rem;
-    color: var(--text-white);
+    background: linear-gradient(45deg, #60a5fa, #34d399);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 600;
 }
 
 .loading-content p {
