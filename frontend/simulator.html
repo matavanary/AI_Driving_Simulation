@@ -131,7 +131,8 @@
                 
                 <!-- Canvas Debug Info -->
                 <div id="canvas-debug" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 3px; font-size: 11px; font-family: monospace; z-index: 100;">
-                    Canvas: <span id="canvas-status">Loading...</span>
+                    Canvas: <span id="canvas-status">Loading...</span><br>
+                    Three.js: <span id="threejs-status">Loading...</span>
                 </div>
                 
                 <!-- Loading Screen -->
@@ -360,6 +361,9 @@
     <script>
         console.log('🎯 Starting Three.js loading...');
         
+        // Initialize global flags
+        window.threeJSReady = false;
+        
         function loadThreeJS() {
             const alternatives = [
                 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
@@ -396,11 +400,21 @@
                     const loadTime = Date.now() - loadStartTime;
                     console.log(`✅ Three.js loaded successfully in ${loadTime}ms from: ${url}`);
                     
-                    // Verify Three.js
+                    // Verify Three.js and set global ready flag
                     setTimeout(() => {
                         if (typeof THREE !== 'undefined') {
                             console.log('✅ Three.js verified, revision:', THREE.REVISION);
+                            
+                            // Set global flag for Three.js readiness
+                            window.threeJSReady = true;
+                            console.log('🎯 Three.js ready flag set');
+                            
                             showLoadSuccess('Three.js', THREE.REVISION);
+                            
+                            // Dispatch custom event for Three.js ready
+                            window.dispatchEvent(new CustomEvent('threeJSLoaded', {
+                                detail: { revision: THREE.REVISION }
+                            }));
                         } else {
                             console.error('❌ Three.js loaded but not accessible');
                             showThreeJSError();
@@ -721,40 +735,85 @@
             console.log('📄 DOM Content Loaded');
             
             // Wait for all libraries to load
-            function waitForLibraries(callback, maxAttempts = 100) {
+            function waitForLibraries(callback, maxAttempts = 150) {
                 let attempts = 0;
                 
                 function check() {
                     attempts++;
-                    console.log(`🔄 Library check attempt ${attempts}/100`);
+                    console.log(`🔄 Library check attempt ${attempts}/150`);
                     
-                    // Check all required components
+                    // Log current state
+                    console.log(`📊 Current library status:`, {
+                        THREE: typeof THREE !== 'undefined',
+                        Chart: typeof Chart !== 'undefined',
+                        SimulationEngine: typeof SimulationEngine !== 'undefined',
+                        SimulatorController: typeof SimulatorController !== 'undefined',
+                        GamepadController: typeof GamepadController !== 'undefined'
+                    });
+                    
+                    // Check all required components - THREE is critical for simulation
+                    const threeReady = typeof THREE !== 'undefined' && window.threeJSReady === true;
                     const allLoaded = typeof Chart !== 'undefined' && 
-                                     typeof THREE !== 'undefined' &&
+                                     threeReady &&
                                      typeof SimulationEngine !== 'undefined' &&
                                      typeof SimulatorController !== 'undefined';
                     
                     if (allLoaded) {
                         console.log('✅ All libraries loaded successfully!');
-                        callback();
+                        // Additional verification for THREE.js components
+                        if (THREE.Scene && THREE.WebGLRenderer && THREE.PerspectiveCamera) {
+                            console.log('✅ Three.js components verified!');
+                            callback();
+                        } else {
+                            console.warn('⚠️ Three.js loaded but components missing, retrying...');
+                            if (attempts < maxAttempts) {
+                                setTimeout(check, 300);
+                            } else {
+                                console.error('❌ Three.js components never became available');
+                                checkLibraryStatus();
+                            }
+                        }
                     } else if (attempts < maxAttempts) {
-                        setTimeout(check, 200); // Increased delay
+                        setTimeout(check, 300); // Increased delay for better stability
                     } else {
                         console.warn('⏰ Timeout waiting for libraries, showing status...');
                         checkLibraryStatus();
                         
-                        // Try to initialize anyway if we have the minimum required
-                        if (typeof SimulatorController !== 'undefined') {
+                        // Only try to initialize if we have THREE and SimulatorController
+                        if (typeof SimulatorController !== 'undefined' && threeReady) {
                             console.log('🚀 Trying to initialize with available components...');
                             callback();
+                        } else {
+                            console.error('❌ Critical libraries missing, cannot initialize simulator');
+                            const missing = [];
+                            if (!threeReady) missing.push('THREE.js');
+                            if (typeof SimulatorController === 'undefined') missing.push('SimulatorController');
+                            showMissingLibrariesError(missing);
                         }
                     }
                 }
                 
-                check();
+                // Start checking immediately, but also set a minimum delay to let scripts load
+                setTimeout(check, 500);
             }
             
-            waitForLibraries(() => {
+            // Also listen for Three.js loaded event for faster initialization
+            let initializationTriggered = false;
+            window.addEventListener('threeJSLoaded', function(event) {
+                console.log('🎯 Three.js loaded event received:', event.detail);
+                if (!initializationTriggered) {
+                    // Give a small delay to let other scripts load
+                    setTimeout(() => {
+                        waitForLibraries(() => {
+                            initializationTriggered = true;
+                            initializeSimulator();
+                        });
+                    }, 1000);
+                }
+            });
+            
+            // Function to handle simulator initialization
+            function initializeSimulator() {
                 console.log('🚗 Starting simulator initialization...');
                 
                 // Check canvas before initialization
@@ -802,6 +861,14 @@
                         </button>
                     `;
                     document.body.appendChild(errorDiv);
+                }
+            }
+            
+            // Start the normal initialization process
+            waitForLibraries(() => {
+                if (!initializationTriggered) {
+                    initializationTriggered = true;
+                    initializeSimulator();
                 }
             });
         });
