@@ -780,6 +780,48 @@ class SimulatorController {
         }
     }
     
+    showError(message) {
+        console.error('🚨 Simulator Error:', message);
+        
+        // Create error display element
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            max-width: 500px;
+            font-family: 'Kanit', sans-serif;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        `;
+        errorDiv.innerHTML = `
+            <h3><i class="fas fa-exclamation-triangle"></i> เกิดข้อผิดพลาด</h3>
+            <p>${message}</p>
+            <div style="margin-top: 15px;">
+                <button onclick="location.reload()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                    <i class="fas fa-sync"></i> รีเฟรช
+                </button>
+                <button onclick="this.parentElement.parentElement.remove()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    <i class="fas fa-times"></i> ปิด
+                </button>
+            </div>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (errorDiv.parentElement) {
+                errorDiv.remove();
+            }
+        }, 10000);
+    }
+    
     logDrivingData(data) {
         const currentTime = Date.now();
         
