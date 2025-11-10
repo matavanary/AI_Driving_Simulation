@@ -22,8 +22,18 @@ console.log('🔍 DOM Elements Status:', {
     userName: !!userName,
     loadingOverlay: !!loadingOverlay,
     notification: !!notification,
-    page: window.location.pathname
+    page: window.location.pathname,
+    isSimulatorPage: window.location.pathname.includes('simulator.html')
 });
+
+// Check for simulator-specific elements if on simulator page
+if (window.location.pathname.includes('simulator.html')) {
+    console.log('🎮 Simulator Elements Status:', {
+        currentUser: !!document.getElementById('current-user'),
+        simulatorContainer: !!document.getElementById('simulation-container'),
+        threeCanvas: !!document.getElementById('three-canvas')
+    });
+}
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -35,15 +45,83 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.__appInitialized = true;
     
+    // Add global error handlers for better debugging
+    setupGlobalErrorHandlers();
+    
     // Add delay to prevent race conditions with API initialization
     setTimeout(() => {
         initializeApp();
     }, 2000); // Wait 2 seconds after DOM load
 });
 
+// Setup Global Error Handlers
+function setupGlobalErrorHandlers() {
+    // Don't setup duplicate handlers if ErrorHandler exists
+    if (window.ErrorHandler) {
+        console.log('🛡️ ErrorHandler detected, skipping duplicate error handlers');
+        return;
+    }
+    
+    // Catch unhandled JavaScript errors
+    window.addEventListener('error', function(event) {
+        // Ignore browser extension errors
+        if (event.filename && (
+            event.filename.includes('chrome-extension://') ||
+            event.filename.includes('moz-extension://') ||
+            event.filename.includes('installHook.js')
+        )) {
+            console.log('🔌 Ignoring extension error:', event.filename);
+            return;
+        }
+        
+        console.error('🚨 Global Error:', {
+            message: event.message,
+            filename: event.filename,
+            line: event.lineno,
+            column: event.colno,
+            error: event.error
+        });
+        
+        // Don't show notification for every minor error
+        if (event.error && event.error.stack && !event.error.stack.includes('Extension')) {
+            showNotification('เกิดข้อผิดพลาดในระบบ กรุณารีเฟรชหน้าเว็บ', 'error');
+        }
+    });
+    
+    // Catch unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+        // Ignore extension-related promise rejections
+        const reason = event.reason;
+        if (reason && (
+            reason.toString().includes('installHook') ||
+            reason.toString().includes('overrideMethod') ||
+            reason.toString().includes('chrome-extension') ||
+            reason.toString().includes('Extension context')
+        )) {
+            console.log('🔌 Ignoring extension promise rejection:', reason);
+            event.preventDefault(); // Prevent default error handling
+            return;
+        }
+        
+        console.error('🚨 Unhandled Promise Rejection:', event.reason);
+        
+        // Check if it's a network or API error
+        if (event.reason && (
+            event.reason.toString().includes('fetch') ||
+            event.reason.toString().includes('API') ||
+            event.reason.toString().includes('network')
+        )) {
+            showNotification('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', 'error');
+        }
+    });
+}
+
 // Initialize Application
 async function initializeApp() {
     console.log('🚗 Driving Simulator initialized');
+    
+    // Check for browser extensions that might cause conflicts
+    checkForProblematicExtensions();
     
     // Wait for API to be ready before proceeding
     if (!window.api) {
@@ -261,29 +339,40 @@ async function checkUserSession() {
     sessionCheckInProgress = true;
     
     try {
+        console.log('🔍 Checking user session...');
+        
         // Use API helper if available for better error handling
         if (window.api && typeof window.api.checkSession === 'function') {
             const data = await window.api.checkSession();
             
             if (data.success && data.logged_in) {
                 currentUser = data.user;
+                console.log('✅ User session valid:', currentUser.username);
                 updateUIForLoggedInUser();
             } else {
+                console.log('ℹ️ No valid user session found');
                 updateUIForLoggedOutUser();
             }
         } else {
+            console.log('⚠️ API helper not available, using fallback');
             const response = await fetch('backend/api/auth.php?action=check-session');
             const data = await response.json();
             
             if (data.success && data.logged_in) {
                 currentUser = data.user;
+                console.log('✅ User session valid:', currentUser.username);
                 updateUIForLoggedInUser();
             } else {
+                console.log('ℹ️ No valid user session found');
                 updateUIForLoggedOutUser();
             }
         }
     } catch (error) {
-        console.error('Session check failed:', error);
+        console.error('❌ Session check failed:', error);
+        // Don't show error notification for session checks unless it's critical
+        if (error.message && !error.message.includes('installHook') && !error.message.includes('overrideMethod')) {
+            console.warn('Session check error (non-critical):', error.message);
+        }
         updateUIForLoggedOutUser();
     } finally {
         sessionCheckInProgress = false;
@@ -291,23 +380,58 @@ async function checkUserSession() {
 }
 
 function updateUIForLoggedInUser() {
-    authButtons.classList.add('hidden');
-    userMenu.classList.remove('hidden');
-    userName.textContent = currentUser.fullname || currentUser.username;
+    // Safe DOM manipulation - check if elements exist first
+    if (authButtons) {
+        authButtons.classList.add('hidden');
+    }
     
-    // Update profile form
+    if (userMenu) {
+        userMenu.classList.remove('hidden');
+    }
+    
+    if (userName) {
+        userName.textContent = currentUser.fullname || currentUser.username;
+    }
+    
+    // For simulator page - update current user display
+    const currentUserSpan = document.getElementById('current-user');
+    if (currentUserSpan) {
+        currentUserSpan.textContent = currentUser.fullname || currentUser.username;
+    }
+    
+    // Update profile form (if exists)
     const profileForm = document.getElementById('profile-form');
     if (profileForm) {
-        document.getElementById('profile-fullname').value = currentUser.fullname || '';
-        document.getElementById('profile-email').value = currentUser.email || '';
-        document.getElementById('profile-phone').value = currentUser.phone || '';
+        const fullnameField = document.getElementById('profile-fullname');
+        const emailField = document.getElementById('profile-email');
+        const phoneField = document.getElementById('profile-phone');
+        
+        if (fullnameField) fullnameField.value = currentUser.fullname || '';
+        if (emailField) emailField.value = currentUser.email || '';
+        if (phoneField) phoneField.value = currentUser.phone || '';
     }
+    
+    console.log('✅ UI updated for logged in user:', currentUser.username);
 }
 
 function updateUIForLoggedOutUser() {
-    authButtons.classList.remove('hidden');
-    userMenu.classList.add('hidden');
+    // Safe DOM manipulation - check if elements exist first
+    if (authButtons) {
+        authButtons.classList.remove('hidden');
+    }
+    
+    if (userMenu) {
+        userMenu.classList.add('hidden');
+    }
+    
+    // For simulator page - reset current user display
+    const currentUserSpan = document.getElementById('current-user');
+    if (currentUserSpan) {
+        currentUserSpan.textContent = 'ผู้ใช้';
+    }
+    
     currentUser = null;
+    console.log('✅ UI updated for logged out user');
 }
 
 // Add session check button for development (only in debug mode)
@@ -816,6 +940,11 @@ function hideNotification() {
 function showFallbackNotification(message, type = 'info') {
     console.log(`📢 Fallback Notification [${type}]:`, message);
     
+    // Add stack trace for error notifications
+    if (type === 'error') {
+        console.trace('Error notification stack trace:');
+    }
+    
     const colors = {
         success: '#27ae60',
         error: '#e74c3c',
@@ -947,6 +1076,35 @@ window.showNotification = showNotification;
 // Session management functions
 window.checkUserSession = checkUserSession;
 window.checkUserSessionIfNeeded = checkUserSessionIfNeeded;
+
+// Check for problematic browser extensions
+function checkForProblematicExtensions() {
+    // Check for common development tools that might interfere
+    const extensionIndicators = [
+        'installHook',
+        '__REACT_DEVTOOLS_GLOBAL_HOOK__',
+        '__VUE_DEVTOOLS_GLOBAL_HOOK__',
+        '__REDUX_DEVTOOLS_EXTENSION__'
+    ];
+    
+    let foundExtensions = [];
+    
+    extensionIndicators.forEach(indicator => {
+        if (window[indicator]) {
+            foundExtensions.push(indicator);
+        }
+    });
+    
+    if (foundExtensions.length > 0) {
+        console.log('🔌 Development extensions detected:', foundExtensions);
+        console.log('ℹ️  If you experience issues, try disabling extensions in an incognito window');
+    }
+    
+    // Check for script overrides
+    if (window.overrideMethod || window.installHook) {
+        console.log('⚠️  Script override methods detected - errors from extensions will be filtered');
+    }
+}
 
 // Additional error prevention for Chrome extensions
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) {
